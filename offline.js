@@ -12,7 +12,7 @@ function refresh(){
   const [label,detail]=states[offlineState];
   $("offline").textContent=label;$("offline").classList.toggle("ready",offlineState==="ready");
   $("cache-detail").textContent=detail;
-  $("install-guide").textContent=standalone()?"游戏已安装在此设备。":promptEvent?"离线资源就绪后，点下方按钮安装到此设备。":/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Mac/.test(navigator.platform)&&navigator.maxTouchPoints>1)?"在 Safari 的分享菜单中选「添加到主屏幕」。":"在浏览器菜单中选择「安装应用」或「添加到主屏幕」。";
+  $("install-guide").textContent=standalone()?"游戏已安装在此设备。":promptEvent?"离线资源就绪后，点下方按钮安装到此设备。":/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Mac/.test(navigator.platform)&&navigator.maxTouchPoints>1)?"在 Safari 中点「分享」→「添加到主屏幕」。如果看到「作为网页 App 打开」，将其开启，再点「添加」。安装后首次打开，请再次确认「离线已就绪」。":"在浏览器菜单中选择「安装应用」或「添加到主屏幕」。";
   $("install-action").hidden=offlineState!=="error"&&!(offlineState==="ready"&&promptEvent&&!standalone());
   $("install-action").textContent=offlineState==="error"?"重试下载":"安装游戏";
   if(standalone())$("install").querySelector("span").textContent="已安装";

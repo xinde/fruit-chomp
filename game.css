@@ -88,3 +88,29 @@ nav{gap:7px}.tool{font-size:13px;gap:5px;padding:6px 8px}.page-heading{margin:18
 }
 @media(max-width:355px){#sound span{display:none}.step-picture{width:30px;height:30px}.best b{font-size:9px}.hud{padding-inline:5px}.metric{gap:3px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+
+#seconds{font-weight:inherit}
+body{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.top{padding-top:env(safe-area-inset-top)}
+@media(pointer:coarse),(max-width:620px){
+  .tool,.practice,.close,#pause-button,#panel-actions button{min-height:44px;min-width:44px}
+  header nav,.brand{flex-shrink:0}
+  .game-focus{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:var(--ink);height:100vh;height:100dvh;overflow:hidden}
+  .game-focus .top,.game-focus .page-heading,.game-focus .guide,.game-focus footer{display:none}
+  .game-focus main{width:100%;height:100%;max-width:none}
+  .game-focus .cabinet{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;border:0;border-radius:0;box-shadow:none}
+  .game-focus .stage{height:100%;min-height:0;background-size:cover}
+  .game-focus .hud{min-height:44px;padding-inline:clamp(12px,4%,54px)}
+  .game-focus #video{width:clamp(96px,18vmin,160px)}
+  .game-focus #hint{max-width:calc(100% - 136px)}
+  .game-focus .overlay-panel{max-height:100%;overflow:auto}
+  .game-focus .strip{padding-inline:14px}
+}
+@media(orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  .header-inner{min-height:48px}.page-heading{margin:7px 0}.page-heading h1{font-size:21px}
+  .stage{height:clamp(205px,calc(100svh - 146px),340px)}
+  .opening{left:8%;top:50%;transform:translateY(-50%)}
+  .title-art{width:clamp(134px,28vh,188px)}.opening p{margin:4px 0 7px;font-size:14px}
+  .opening .practice{margin-top:5px}.opening .primary{min-height:44px}
+  .overlay-panel{padding:10px 19px}.overlay-panel>img{width:32px;height:32px}
+}
