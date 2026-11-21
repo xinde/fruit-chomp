@@ -27,7 +27,7 @@
 </defs></svg>
 <header class="top"><div class="wrap header-inner">
   <div class="brand"><span class="brand-sprite"><img src="./assets/cherry.png" alt=""></span><div><b>果味街机</b><small>FRUIT ARCADE</small></div></div>
-  <nav aria-label="游戏工具"><button id="sound" class="tool" aria-label="关闭音效" aria-pressed="true"><svg><use href="#volume"/></svg><span>音效开</span></button>
+  <nav aria-label="游戏工具"><a class="tool motion-link" href="./motion-test.html">动作测试</a><button id="sound" class="tool" aria-label="关闭音效" aria-pressed="true"><svg><use href="#volume"/></svg><span>音效开</span></button>
   <button id="install" class="tool"><svg><use href="#download"/></svg><span>安装游戏</span></button></nav>
 </div></header>
 <main class="wrap">
@@ -69,5 +69,5 @@
   <form method="dialog"><button class="close" aria-label="关闭玩法指南"><svg><use href="#cross"/></svg></button></form>
   <h2 id="guide-dialog-title">玩法指南</h2><div id="guide-content"></div><small class="guide-privacy">摄像头画面仅在本机处理</small>
 </dialog>
-<dialog id="install-dialog" aria-labelledby="install-title"><form method="dialog"><button class="close" aria-label="关闭"><svg><use href="#cross"/></svg></button></form><h2 id="install-title">安装与离线游玩</h2><p id="cache-detail" role="status"></p><p id="install-guide"></p><p><a href="https://github.com/xinde/fruit-chomp/releases/latest/download/fruit-chomp-offline.zip" download>下载电脑离线包</a>（需 Python 3）</p><button id="install-action" class="primary" hidden>安装游戏</button></dialog>
+<dialog id="install-dialog" aria-labelledby="install-title"><form method="dialog"><button class="close" aria-label="关闭"><svg><use href="#cross"/></svg></button></form><h2 id="install-title">安装到设备</h2><ol class="install-steps"><li id="install-guide"></li><li>首次从新图标联网打开，等到「离线已就绪」即可断网游玩和测试动作。</li></ol><p id="cache-detail" role="status"></p><button id="install-action" class="primary" hidden>安装应用</button></dialog>
 </body></html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ecf2df"><meta name="description" content="在你的摄像头上逐项检查水果大口吃的移头瞄准、张嘴咬合与闭眼大口吞。">
+  <title>动作测试 · 水果大口吃</title><link rel="icon" href="./assets/icon-192.png"><link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./motion-test.css"><script type="module" src="./motion-test.js"></script>
+</head>
+<body>
+  <header><div class="shell top"><div class="identity"><img src="./assets/cherry.png" alt=""><h1>动作测试</h1></div><nav><a class="cache-link" id="cache-link" href="./#install">准备离线…</a><a href="./">返回游戏</a></nav></div></header>
+  <main class="shell">
+    <section class="monitor" aria-label="实时识别">
+      <div class="screen" id="screen">
+        <video id="preview" autoplay muted playsinline aria-label="镜像摄像头预览"></video>
+        <div class="standby"><img src="./assets/melon.png" alt=""></div>
+        <button id="recenter" hidden>重新居中</button><span id="last-event" hidden></span>
+        <span class="tracking" id="tracking" role="status">摄像头已关闭</span>
+      </div>
+      <div class="aim-panel"><div class="aim-label"><b>瞄准位置</b><span id="position">等待定位</span></div>
+        <div class="rail" role="img" aria-label="瞄准框的实时水平位置"><i class="center-line"></i><i id="cursor"></i></div>
+      </div>
+      <div class="readings"><span>嘴巴 <b id="mouth">—</b></span><span>双眼 <b id="eyes">—</b></span></div>
+    </section>
+    <section class="checks" aria-labelledby="check-title">
+      <div class="section-head"><h2 id="check-title">动作检查</h2><span id="progress">通过 0 / 6</span></div>
+      <div class="choices" id="choices" role="group" aria-label="选择或重测动作"></div>
+      <select id="compact-choice" aria-label="选择要测试的动作"></select>
+      <div class="prompt" aria-live="polite" aria-atomic="true"><h3 id="instruction-title">准备测试</h3><p id="instruction">开启摄像头，把整张脸放进画面。影像只在本机处理。</p></div>
+      <div class="actions">
+        <button id="camera" class="primary">开启摄像头</button>
+        <button id="next" class="primary" hidden>下一项</button>
+        <button id="retry" hidden>重测本项</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

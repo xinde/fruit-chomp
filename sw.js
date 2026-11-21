@@ -1,12 +1,17 @@
-const VERSION = "9b80f8466ad1c558";
+const VERSION = "7a3b0fff1459b982";
 const FILES = [
   "index.html",
+  "motion-test.html",
+  "motion-test.css",
+  "motion-test.js",
+  "motion-checks.js",
   "game.css",
   "game.js",
   "round.js",
   "camera.js",
   "scene.js",
   "offline.js",
+  "pwa.js",
   "manifest.webmanifest",
   "assets/berry.png",
   "assets/bomb.png",
@@ -48,6 +53,22 @@ self.addEventListener("activate", event => {
       if (key.startsWith(prefix) && key !== cacheName) await caches.delete(key);
     }
     await self.clients.claim();
+  })());
+});
+
+self.addEventListener("message", event => {
+  if (event.data?.type !== "prepare-offline" || !event.ports[0]) return;
+  const reply = event.ports[0];
+  event.waitUntil((async () => {
+    try {
+      const cache = await caches.open(cacheName);
+      const saved = new Set((await cache.keys()).map(request => request.url));
+      const missing = urls.filter(url => !saved.has(url));
+      if (missing.length) await cache.addAll(missing.map(url => new Request(url, {cache: "reload"})));
+      reply.postMessage({ready:true});
+    } catch {
+      reply.postMessage({ready:false});
+    }
   })());
 });
 

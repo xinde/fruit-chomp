@@ -1,9 +1,10 @@
+import {monitorOffline} from "./pwa.js";
 const $ = id => document.getElementById(id);
 const dialog=$("install-dialog");
-let promptEvent=null, registration=null, offlineState="loading", retry=false;
+let promptEvent=null, offlineState="loading";
 const states={
-  loading:["正在准备离线资源…","正在保存游戏、声音所需代码和面部识别模型。首次准备约需 23 MB，请保持页面打开。"],
-  ready:["离线已就绪","游戏和面部识别模型已保存在此设备。现在断开网络，也可以重新打开游戏并使用摄像头。"],
+  loading:["正在准备离线资源…","正在保存游戏、动作测试和识别模型，首次约 23 MB。"],
+  ready:["离线已就绪","离线已就绪 · 游戏、动作测试和识别模型已缓存。"],
   error:["离线资源未备妥 · 重试","离线资源尚未保存完整。请确认网络和浏览器存储空间，再点重试。"],
   unsupported:["离线功能不可用","请使用支持 Service Worker 的浏览器，通过 HTTPS 或本机 localhost 打开游戏。"]
 };
@@ -12,47 +13,28 @@ function refresh(){
   const [label,detail]=states[offlineState];
   $("offline").textContent=label;$("offline").classList.toggle("ready",offlineState==="ready");
   $("cache-detail").textContent=detail;
-  $("install-guide").textContent=standalone()?"游戏已安装在此设备。":promptEvent?"离线资源就绪后，点下方按钮安装到此设备。":/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Mac/.test(navigator.platform)&&navigator.maxTouchPoints>1)?"在 Safari 中点「分享」→「添加到主屏幕」。如果看到「作为网页 App 打开」，将其开启，再点「添加」。安装后首次打开，请再次确认「离线已就绪」。":"在浏览器菜单中选择「安装应用」或「添加到主屏幕」。";
+  const appleMobile=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Mac/.test(navigator.platform)&&navigator.maxTouchPoints>1);
+  let guide="打开浏览器菜单，选择「安装应用」或「添加到主屏幕」。";
+  if(appleMobile)guide="在 Safari 点「分享」→「添加到主屏幕」，如有「作为网页 App 打开」选项，将它开启。";
+  else if(promptEvent)guide="等离线资源就绪，点「安装应用」并确认。";
+  else if(/Mac/.test(navigator.platform)&&/^((?!chrome|android).)*safari/i.test(navigator.userAgent))guide="在 Safari 的「文件」或分享菜单中选择「添加到程序坞」。";
+  if(standalone())guide="已从安装后的网页应用打开。";
+  $("install-guide").textContent=guide;
   $("install-action").hidden=offlineState!=="error"&&!(offlineState==="ready"&&promptEvent&&!standalone());
-  $("install-action").textContent=offlineState==="error"?"重试下载":"安装游戏";
+  $("install-action").textContent=offlineState==="error"?"重试缓存":"安装应用";
   if(standalone())$("install").querySelector("span").textContent="已安装";
 }
 function update(value){offlineState=value;refresh();}
 window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();promptEvent=event;refresh();});
 window.addEventListener("appinstalled",()=>{promptEvent=null;refresh();});
-const seen=new WeakSet();
-function observe(worker){
-  if(!worker||seen.has(worker))return;
-  seen.add(worker);
-  const inspect=()=>{
-    if(worker.state==="activated")update("ready");
-    else if(worker.state==="redundant"&&!registration?.active)update("error");
-  };
-  worker.addEventListener("statechange",inspect);inspect();
-}
-async function setup(){
-  if(!("serviceWorker" in navigator)){update("unsupported");return;}
-  if(retry)return;
-  retry=true;update("loading");
-  try {
-    registration=await navigator.serviceWorker.register("./sw.js",{scope:"./",updateViaCache:"none"});
-    registration.onupdatefound=()=>observe(registration.installing);
-    observe(registration.installing);observe(registration.waiting);
-    if(registration.active?.state==="activated")update("ready");
-    else if(!registration.installing&&!registration.waiting){
-      await registration.update();observe(registration.installing);
-    }
-    navigator.serviceWorker.ready.then(()=>update("ready"));
-  } catch {update("error");}
-  finally{retry=false;}
-}
+const prepare=monitorOffline(update);
 function show(){
   window.dispatchEvent(new Event("fruit-settings"));
   refresh();if(!dialog.open)dialog.showModal();
 }
 $("install").onclick=show;$("offline").onclick=show;
 $("install-action").onclick=async()=>{
-  if(offlineState==="error"){await setup();return;}
+  if(offlineState==="error"){await prepare();return;}
   if(promptEvent){const current=promptEvent;promptEvent=null;await current.prompt();await current.userChoice;refresh();}
 };
-setup();
+if(location.hash==="#install")show();

@@ -1,5 +1,5 @@
 import {createScene} from "./scene.js";
-import {loadModel, readExpression, headAim, FeastGesture} from "./camera.js";
+import {loadModel, requestFrontCamera, readExpression, HeadCalibration, followAim, BiteGesture, FeastGesture} from "./camera.js";
 import {Round, capacity, duration} from "./round.js";
 import "./offline.js";
 
@@ -9,10 +9,11 @@ const scene=createScene(canvas);
 let round=new Round();
 const feastGesture=new FeastGesture();
 let state="home", mode="practice", session=0, stream=null, detector=null;
-let lastFrame=0, lastVideo=-1, lastDetection=0, lastSeen=-Infinity, alignedSince=0;
-let headCenter=.5, headTravel=.16, desiredAim=.5;
+let lastFrame=0, lastVideo=-1, lastDetection=0, lastSeen=-Infinity;
+const head=new HeadCalibration(), bite=new BiteGesture();
+let desiredAim=.5;
 let eyesShut=false, feastRequested=false;
-let mouth=false, armed=false, latched=false, keyUntil=0;
+let keyUntil=0;
 let aim=.5;
 const heldKeys=new Set();
 let frameRequest=0, audio;
@@ -93,7 +94,7 @@ function resetSteering() {
 }
 function prepareAlignment() {
   resetSteering();
-  lastSeen=-Infinity;alignedSince=0;lastVideo=-1;lastDetection=0;mouth=false;armed=false;latched=false;
+  lastSeen=-Infinity;head.since=null;lastVideo=-1;lastDetection=0;bite.reset();
   switchState("align","正在定位面部");hint("头摆在舒服的中间位置，轻轻合嘴");
 }
 function beginFrames() {
@@ -108,10 +109,7 @@ async function activateCamera(returning) {
     returning?["结束本局",finish]:["取消",home]
   ]);
   try {
-    if(!navigator.mediaDevices?.getUserMedia)throw new DOMException("Camera unavailable","NotSupportedError");
-    const incoming=await navigator.mediaDevices.getUserMedia({audio:false,video:{
-      facingMode:{ideal:"user"},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}
-    }});
+    const incoming=await requestFrontCamera();
     if(ticket!==session){incoming.getTracks().forEach(t=>t.stop());return;}
     stream=incoming;
     stream.getVideoTracks()[0].onended=()=>{
@@ -135,7 +133,7 @@ async function activateCamera(returning) {
 }
 function start(input) {
   invalidate();unlockSound();mode=input;round=new Round();aim=desiredAim=.5;resetSteering();
-  keyUntil=0;mouth=latched=false;armed=false;hud();
+  keyUntil=0;bite.reset();hud();
   if(mode==="camera"){activateCamera(false);return;}
   switchState("playing","免摄像头试玩");hint("点水果瞄准并咬，或用方向键和空格");
   beginFrames();
@@ -147,7 +145,7 @@ function pause() {
 }
 function resume() {
   if(state!=="paused")return;
-  unlockSound();keyUntil=0;mouth=latched=false;armed=false;
+  unlockSound();keyUntil=0;bite.reset();
   if(mode==="camera"){activateCamera(true);return;}
   switchState("playing","免摄像头试玩");
   beginFrames();
@@ -162,26 +160,21 @@ function readFace(now) {
   if(now-lastDetection<78||video.readyState<2||video.currentTime===lastVideo)return;
   lastDetection=now;lastVideo=video.currentTime;
   const face=readExpression(detector.detectForVideo(video,now),video.videoWidth,video.videoHeight);
+  bite.sample(face);
   if(!face){
-    mouth=false;eyesShut=false;alignedSince=0;feastGesture.reset();
+    eyesShut=false;head.since=null;feastGesture.reset();
     return;
   }
   lastSeen=now;
   eyesShut=face.eyesShut;
-  if(face.closed){armed=true;mouth=false;latched=false;}
-  if(face.open && armed)mouth=true;
   if(state==="align"){
-    if(!face.closed){alignedSince=0;return;}
-    if(!alignedSince){alignedSince=now;headCenter=face.headX;}
-    headCenter += (face.headX-headCenter)*.3;
-    headTravel = Math.max(.11,Math.min(.23,face.faceWidth*.55));
-    if(now-alignedSince>=300){
+    if(head.sample(face,now)){
       aim=desiredAim=.5;
       switchState("playing","表情识别中");lastFrame=now;
     }
     return;
   }
-  desiredAim=headAim(face,headCenter,headTravel);
+  desiredAim=head.target(face);
   if(feastGesture.sample(face,round.full,now))feastRequested=true;
 }
 
@@ -191,12 +184,12 @@ function resolveBites(now,freshFace) {
     const feast=round.feast();
     if(feast){
       scene.feast(feast.fruits,feast.points,round.streak,now,aim);
-      feastGesture.reset();keyUntil=0;latched=true;
+      feastGesture.reset();keyUntil=0;bite.consume();
       chirp(390,.16);chirp(650,.18,.09);chirp(910,.22,.18);
       return;
     }
   }
-  const biting=mode==="camera" ? mouth && !latched && !eyesShut && freshFace : keyUntil>now;
+  const biting=mode==="camera" ? bite.ready(eyesShut,freshFace) : keyUntil>now;
   if(!biting)return;
   const flight=round.flights.find(f=>f.pose?.inFrame);
   if(!flight)return;
@@ -204,7 +197,7 @@ function resolveBites(now,freshFace) {
   scene.bite(flight.item,points,round.streak,now,aim);
   if(points<0)chirp(115,.27,0,"sawtooth");
   else {chirp(240,.08,0,"sawtooth");chirp(620+round.streak*12,.12,.045);}
-  latched=true;keyUntil=0;
+  bite.consume();keyUntil=0;
 }
 
 function showPlayHint() {
@@ -215,7 +208,7 @@ function showPlayHint() {
   const front=round.flights.find(f=>f.pose?.inFrame);
   if(front?.item.type==="bomb")hint("炸弹！闭嘴放过");
   else if(mode==="practice")hint("点水果咬一口 · 方向键移动，空格咬");
-  else if(latched)hint("合嘴，准备下一口");
+  else if(bite.latched)hint("合嘴，准备下一口");
   else hint(front?"对准了，张嘴！":"把头移向水果");
 }
 
@@ -230,7 +223,7 @@ function frame(now) {
     if(round.elapsed>=duration){finish();return;}
     const freshFace=now-lastSeen<220;
     if(mode==="camera"){
-      if(freshFace)aim+=(desiredAim-aim)*(1-Math.exp(-delta/.075));
+      if(freshFace)aim=followAim(aim,desiredAim,delta);
     } else {
       const direction=Number(heldKeys.has("ArrowRight"))-Number(heldKeys.has("ArrowLeft"));
       aim=Math.max(0,Math.min(1,aim+direction*.82*Math.min(delta,.1)));
@@ -238,7 +231,7 @@ function frame(now) {
     for(const flight of round.flights)flight.pose=scene.project(flight.item,flight.progress,aim);
     resolveBites(now,freshFace);
     showPlayHint();
-    scene.draw(round.flights,aim,mode==="camera"?mouth:keyUntil>now,now);hud();
+    scene.draw(round.flights,aim,mode==="camera"?bite.open:keyUntil>now,now);hud();
   } else if(state==="align")scene.draw([],aim,false,now);
   frameRequest=requestAnimationFrame(frame);
 }
