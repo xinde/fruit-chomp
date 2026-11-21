@@ -3,6 +3,7 @@ import {loadModel, readExpression, FeastGesture} from "./camera.js";
 import {requestFrontCamera, HeadCalibration, followAim, BiteGesture} from "./input-controls.js";
 import {Round, capacity, duration} from "./round.js";
 import "./offline.js";
+import {BackgroundMusic} from "./music.js";
 
 const $ = id => document.getElementById(id);
 const stage=$("stage"), canvas=$("world"), video=$("video");
@@ -17,11 +18,16 @@ let eyesShut=false, feastRequested=false;
 let keyUntil=0;
 let aim=.5;
 const heldKeys=new Set();
+const soundtrack=new BackgroundMusic();
 let frameRequest=0, audio;
 function stored(key,fallback) {try{return localStorage.getItem(key)??fallback;}catch{return fallback;}}
 function save(key,value){try{localStorage.setItem(key,String(value));}catch{}}
 let best=Number(stored("fruit-chomp.best",0))||0;
 let sound=stored("fruit-chomp.sound","on")==="on";
+// Respect a previously muted game on the first visit after upgrading.
+const musicSetting=stored("fruit-chomp.music",null);
+let musicEnabled=musicSetting===null?sound:musicSetting==="on";
+if(musicSetting===null)save("fruit-chomp.music",musicEnabled?"on":"off");
 const digits=value=>value<0?"−"+String(-value).padStart(3,"0"):String(value).padStart(4,"0");
 function hud() {
   const values = { score: digits(round.score), combo: "×"+round.streak, seconds: String(Math.ceil(duration-round.elapsed)), best: digits(best), "fullness-count": round.fullness+"/"+capacity };
@@ -40,9 +46,26 @@ function soundLabel() {
   $("sound").setAttribute("aria-label",sound?"关闭音效":"开启音效");
   $("sound").setAttribute("aria-pressed",String(sound));
 }
-function unlockSound() {
-  if (!sound) return;
-  try {audio??=new (window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});}catch{}
+function syncMusic() {
+  if(musicEnabled && state==="playing" && !document.hidden && audio?.state==="running")soundtrack.play(audio);
+  else soundtrack.stop();
+}
+function musicLabel() {
+  const button=$("music");
+  button.querySelector("use").setAttribute("href",musicEnabled?"#music-note":"#music-off");
+  button.querySelector("span").textContent=musicEnabled?"音乐开":"音乐关";
+  button.setAttribute("aria-pressed",String(musicEnabled));
+  button.title=musicEnabled?"关闭背景音乐":"开启背景音乐";
+}
+function unlockAudio() {
+  if(!sound && !musicEnabled)return;
+  try{
+    if(!audio){
+      audio=new (window.AudioContext||window.webkitAudioContext)();
+      audio.addEventListener("statechange",syncMusic);
+    }
+    if(audio.state!=="running")audio.resume().then(syncMusic).catch(()=>{});
+  }catch{}
 }
 function chirp(pitch,length=.1,delay=0,type="triangle") {
   if (!sound || !audio || audio.state!=="running") return;
@@ -52,7 +75,14 @@ function chirp(pitch,length=.1,delay=0,type="triangle") {
   gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(.07,at+.008);gain.gain.exponentialRampToValueAtTime(.0001,at+length);
   osc.connect(gain);gain.connect(audio.destination);osc.start(at);osc.stop(at+length+.01);
 }
-$("sound").onclick=()=>{sound=!sound;save("fruit-chomp.sound",sound?"on":"off");soundLabel();unlockSound();chirp(500);};
+$("sound").onclick=()=>{sound=!sound;save("fruit-chomp.sound",sound?"on":"off");soundLabel();unlockAudio();chirp(500);};
+$("music").onclick=()=>{
+  musicEnabled=!musicEnabled;
+  save("fruit-chomp.music",musicEnabled?"on":"off");
+  musicLabel();
+  if(musicEnabled)unlockAudio();
+  syncMusic();
+};
 function hint(text="") {
   const el=$("hint");if(el.textContent!==text)el.textContent=text;el.hidden=!text;
 }
@@ -68,7 +98,7 @@ function switchState(value,status) {
   state=value;stage.dataset.view=value;
   document.body.classList.toggle("game-focus",value!=="home");$("status").textContent=status;
   $("overlay").hidden=true;$("pause-button").hidden=!(value==="playing"||value==="align");
-  hint();hud();
+  hint();hud();syncMusic();
 }
 function stopCamera() {
   if (stream) for (const track of stream.getTracks()) {track.onended=null;track.stop();}
@@ -133,7 +163,7 @@ async function activateCamera(returning) {
   }
 }
 function start(input) {
-  invalidate();unlockSound();mode=input;round=new Round();aim=desiredAim=.5;resetSteering();
+  invalidate();soundtrack.reset();unlockAudio();mode=input;round=new Round();aim=desiredAim=.5;resetSteering();
   keyUntil=0;bite.reset();hud();
   if(mode==="camera"){activateCamera(false);return;}
   switchState("playing","免摄像头试玩");hint("点水果瞄准并咬，或用方向键和空格");
@@ -146,7 +176,7 @@ function pause() {
 }
 function resume() {
   if(state!=="paused")return;
-  unlockSound();keyUntil=0;bite.reset();
+  unlockAudio();keyUntil=0;bite.reset();
   if(mode==="camera"){activateCamera(true);return;}
   switchState("playing","免摄像头试玩");
   beginFrames();
@@ -259,7 +289,7 @@ window.addEventListener("keydown",event=>{
     event.preventDefault();heldKeys.add(event.code);
   }
   if(event.code==="KeyF" && !event.repeat)practiceFeast();
-  if(event.code==="Space"&&mode==="practice"&&state==="playing"&&!$("install-dialog").open){
+  if(event.code==="Space"&&event.target!==$("music")&&mode==="practice"&&state==="playing"&&!$("install-dialog").open){
     event.preventDefault();if(!event.repeat)practiceBite();
   }
   if(event.key==="Escape"&&!$("install-dialog").open){
@@ -274,4 +304,4 @@ window.addEventListener("pagehide",event=>{
   if(event.persisted && (state==="playing"||state==="align"))pause();
   else if(!event.persisted||state==="loading")home();
 });
-soundLabel();hud();
+soundLabel();musicLabel();hud();

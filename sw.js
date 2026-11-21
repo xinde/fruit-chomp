@@ -1,4 +1,4 @@
-const VERSION = "36cebeb289bd56cb";
+const VERSION = "488f10aa1ac48436";
 const FILES = [
   "index.html",
   "motion-test.html",
@@ -7,6 +7,7 @@ const FILES = [
   "motion-checks.js",
   "game.css",
   "game.js",
+  "music.js",
   "round.js",
   "camera.js",
   "scene.js",

@@ -13,6 +13,8 @@
   <symbol id="pad" viewBox="0 0 24 24"><path d="M7 6h10l3 2 2 10-2 1-5-4H9l-5 4-2-1L4 8zM6 10h5m-2.5-2.5v5M16 10h.01m2 2h.01"/></symbol>
   <symbol id="volume" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 8q4 4 0 8m3-11q7 7 0 14"/></symbol>
   <symbol id="mute" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 9l6 6m0-6-6 6"/></symbol>
+  <symbol id="music-note" viewBox="0 0 24 24"><path d="M9 17V6l11-3v12M9 9l11-3"/><ellipse cx="6" cy="18" rx="3" ry="2.5" fill="currentColor"/><ellipse cx="17" cy="16" rx="3" ry="2.5" fill="currentColor"/></symbol>
+  <symbol id="music-off" viewBox="0 0 24 24"><path d="M9 17v-4m0-6V6l11-3v10M12 8l8-2M3 3l18 18"/><ellipse cx="6" cy="18" rx="3" ry="2.5" fill="currentColor"/></symbol>
   <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></symbol>
   <symbol id="camera" viewBox="0 0 24 24"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/></symbol>
   <symbol id="play" viewBox="0 0 24 24"><path d="M6 3v18l15-9z" fill="currentColor" stroke="none"/></symbol>
@@ -51,6 +53,7 @@
       <canvas id="world" aria-label="水果和炸弹飞行区"></canvas>
       <video id="video" muted playsinline autoplay aria-label="本机摄像头预览"></video>
       <div id="hint" role="status" hidden></div>
+      <button id="music" type="button" aria-label="背景音乐" aria-pressed="true" title="关闭背景音乐"><svg aria-hidden="true"><use href="#music-note"/></svg><span>音乐开</span></button>
       <button id="pause-button" aria-label="暂停游戏" hidden><svg><use href="#pause"/></svg></button>
       <button id="feast-button" class="primary" hidden>大口吞</button>
       <div class="overlay" id="overlay" hidden><div class="overlay-panel"><img id="panel-fruit" src="./assets/berry.png" alt="">
