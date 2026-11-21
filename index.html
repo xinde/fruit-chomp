@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ecf2df"><meta name="description" content="张开嘴巴，吃掉迎面飞来的像素水果。可离线玩的摄像头体感街机。">
+  <title>水果大口吃 · Fruit Chomp!</title>
+  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./assets/icon-192.png"><link rel="apple-touch-icon" href="./assets/icon-180.png">
+  <link rel="stylesheet" href="./game.css"><script type="module" src="./game.js"></script>
+</head>
+<body>
+<svg class="defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="pad" viewBox="0 0 24 24"><path d="M7 6h10l3 2 2 10-2 1-5-4H9l-5 4-2-1L4 8zM6 10h5m-2.5-2.5v5M16 10h.01m2 2h.01"/></symbol>
+  <symbol id="volume" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 8q4 4 0 8m3-11q7 7 0 14"/></symbol>
+  <symbol id="mute" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 9l6 6m0-6-6 6"/></symbol>
+  <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></symbol>
+  <symbol id="camera" viewBox="0 0 24 24"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M6 3v18l15-9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="keys" viewBox="0 0 24 24"><path d="M2 5h20v14H2zM6 9h.1m4 0h.1m4 0h.1m4 0h.1M6 13h.1m4 1h7"/></symbol>
+  <symbol id="trophy" viewBox="0 0 24 24"><path d="M7 3h10v6a5 5 0 0 1-10 0zM7 5H3v3q0 4 5 4m9-7h4v3q0 4-5 4m-4 3v5m-4 1h8"/></symbol>
+  <symbol id="timer" viewBox="0 0 24 24"><circle cx="12" cy="14" r="8"/><path d="M9 2h6m-3 1v3m0 4v5h4"/></symbol>
+  <symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8L21 9h-8z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.4 7 .9-5.1 5 1.2 7-6.2-3.4-6.2 3.4 1.2-7-5-5 7-.9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="pause" viewBox="0 0 24 24"><path d="M7 4v16m10-16v16" stroke-width="5"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><path d="M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></symbol>
+  <symbol id="cross" viewBox="0 0 24 24"><path d="m5 5 14 14m0-14L5 19"/></symbol>
+</defs></svg>
+<header class="top"><div class="wrap header-inner">
+  <div class="brand"><span class="brand-sprite"><img src="./assets/cherry.png" alt=""></span><div><b>果味街机</b><small>FRUIT ARCADE</small></div></div>
+  <nav aria-label="游戏工具"><button id="sound" class="tool" aria-label="关闭音效" aria-pressed="true"><svg><use href="#volume"/></svg><span>音效开</span></button>
+  <button id="install" class="tool"><svg><use href="#download"/></svg><span>安装游戏</span></button></nav>
+</div></header>
+<main class="wrap">
+  <div class="page-heading"><h1>水果大口吃</h1><div class="best"><svg><use href="#trophy"/></svg>最高纪录 <b id="best">0000</b></div></div>
+  <section class="cabinet" aria-label="游戏机">
+    <div class="hud">
+      <div class="metric"><span class="coin"><svg><use href="#star"/></svg></span><span class="meter-label">得分</span><strong id="score">0000</strong></div>
+      <div class="metric"><svg class="gold"><use href="#bolt"/></svg><span class="meter-label">连击</span><strong id="combo">×0</strong></div>
+      <div class="metric"><svg class="mint"><use href="#timer"/></svg><span class="meter-label">剩余</span><strong id="time">60<span>s</span></strong></div>
+    </div>
+    <div class="stage" id="stage" data-view="home">
+      <div class="cover-art" aria-hidden="true"><i class="glint g1"></i><i class="glint g2"></i><i class="glint g3"></i><i class="glint g4"></i>
+        <img class="float fruit-berry" src="./assets/berry.png" alt=""><img class="float fruit-orange" src="./assets/orange.png" alt=""><img class="float fruit-cherry" src="./assets/cherry.png" alt=""><img class="float fruit-melon" src="./assets/melon.png" alt="">
+      </div>
+      <div class="opening">
+        <img class="title-art" src="./assets/title.png" alt="Fruit Chomp!">
+        <p>张开嘴巴，吃掉飞来的水果！</p>
+        <button class="primary" id="start"><svg><use href="#play"/></svg>开始游戏</button>
+        <button class="practice" id="practice"><svg><use href="#keys"/></svg>免摄像头试玩</button>
+      </div>
+      <canvas id="world" aria-label="水果飞行区"></canvas>
+      <video id="video" muted playsinline autoplay aria-label="本机摄像头预览"></video>
+      <div id="hint" role="status" hidden></div>
+      <button id="pause-button" aria-label="暂停游戏" hidden><svg><use href="#pause"/></svg></button>
+      <div class="overlay" id="overlay" hidden><div class="overlay-panel"><img id="panel-fruit" src="./assets/berry.png" alt="">
+        <h2 id="panel-title"></h2><p id="panel-text"></p><div id="panel-actions"></div></div></div>
+    </div>
+    <div class="strip"><span class="signal"><i></i><span id="status">等待开始</span></span><span class="stage-name"><i class="leaf"></i> 阳光果园</span></div>
+  </section>
+  <section class="guide" aria-labelledby="guide-title"><h2 id="guide-title"><svg><use href="#pad"/></svg>玩法指南</h2><div class="steps">
+    <div class="step"><div class="step-picture cam-pic"><svg><use href="#camera"/></svg></div><div><h3>面对镜头</h3><p>允许使用摄像头，让整张脸入镜。</p></div></div>
+    <div class="step"><div class="step-picture"><img src="./assets/melon.png" alt=""></div><div><h3>张嘴吃水果</h3><p>水果飞进光圈时，张嘴咬一口。</p></div></div>
+    <div class="step"><div class="step-picture bolt-pic"><svg><use href="#bolt"/></svg></div><div><h3>连吃加分</h3><p>合嘴再张嘴，连续命中攒连击。</p></div></div>
+  </div></section>
+  <footer><span><svg><use href="#lock"/></svg>摄像头画面仅在本机处理</span><button id="offline">正在准备离线资源…</button></footer>
+</main>
+<dialog id="install-dialog"><form method="dialog"><button class="close" aria-label="关闭"><svg><use href="#cross"/></svg></button></form><h2>安装与离线游玩</h2><p id="cache-detail" role="status"></p><p id="install-guide"></p><p><a href="https://github.com/xinde/fruit-chomp/releases/latest/download/fruit-chomp-offline.zip" download>下载电脑离线包</a>（需 Python 3）</p><button id="install-action" class="primary" hidden>安装游戏</button></dialog>
+</body></html>

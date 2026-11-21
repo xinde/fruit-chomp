@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "水果大口吃 · Fruit Chomp!",
+  "short_name": "水果大口吃",
+  "lang": "zh-CN",
+  "description": "张嘴接水果的离线体感街机",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5e8",
+  "theme_color": "#ecf2df",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

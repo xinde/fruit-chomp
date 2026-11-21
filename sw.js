@@ -1,0 +1,63 @@
+const VERSION = "a814e4eb3874961a";
+const FILES = [
+  "index.html",
+  "game.css",
+  "game.js",
+  "camera.js",
+  "scene.js",
+  "offline.js",
+  "manifest.webmanifest",
+  "assets/berry.png",
+  "assets/cherry.png",
+  "assets/icon-180.png",
+  "assets/icon-192.png",
+  "assets/icon-512.png",
+  "assets/lemon.png",
+  "assets/melon.png",
+  "assets/orange.png",
+  "assets/orchard.png",
+  "assets/press-start.ttf",
+  "assets/title.png",
+  "vendor/mediapipe/face_landmarker.task",
+  "vendor/mediapipe/vision_bundle.mjs",
+  "vendor/mediapipe/wasm/vision_wasm_internal.js",
+  "vendor/mediapipe/wasm/vision_wasm_internal.wasm",
+  "vendor/mediapipe/wasm/vision_wasm_nosimd_internal.js",
+  "vendor/mediapipe/wasm/vision_wasm_nosimd_internal.wasm"
+];
+
+const scope = self.registration.scope;
+const prefix = "fruit-chomp:" + new URL(scope).pathname + ":";
+const cacheName = prefix + VERSION;
+const urls = FILES.map(path => new URL(path, scope).href);
+const known = new Set(urls);
+
+self.addEventListener("install", event => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(cacheName);
+    await cache.addAll(urls.map(url => new Request(url, {cache: "reload"})));
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) {
+      if (key.startsWith(prefix) && key !== cacheName) await caches.delete(key);
+    }
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("fetch", event => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  url.search = "";
+  const isEntry = req.mode === "navigate" && (url.href === scope || url.href === new URL("index.html", scope).href);
+  if (!isEntry && !known.has(url.href)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(cacheName);
+    return await cache.match(isEntry ? new URL("index.html", scope).href : url.href) || fetch(req);
+  })());
+});
