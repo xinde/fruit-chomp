@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 
 root = Path(__file__).resolve().parents[1]
-runtime = ["index.html", "game.css", "game.js", "camera.js", "scene.js",
+runtime = ["index.html", "game.css", "game.js", "round.js", "camera.js", "scene.js",
            "offline.js", "manifest.webmanifest"]
 for folder in ["assets", "vendor"]:
     runtime.extend(sorted(p.relative_to(root).as_posix() for p in (root / folder).rglob("*")

@@ -44,7 +44,7 @@
       </div>
       <div class="opening">
         <img class="title-art" src="./assets/title.png" alt="Fruit Chomp!">
-        <p>眨眼瞄准，张嘴吃水果！</p>
+        <p>移动脑袋，张嘴吃水果！</p>
         <button class="primary" id="start"><svg><use href="#play"/></svg>开始游戏</button>
         <button class="practice" id="practice"><svg><use href="#keys"/></svg>免摄像头试玩</button>
       </div>
@@ -52,15 +52,16 @@
       <video id="video" muted playsinline autoplay aria-label="本机摄像头预览"></video>
       <div id="hint" role="status" hidden></div>
       <button id="pause-button" aria-label="暂停游戏" hidden><svg><use href="#pause"/></svg></button>
+      <button id="feast-button" class="primary" hidden>大口吞</button>
       <div class="overlay" id="overlay" hidden><div class="overlay-panel"><img id="panel-fruit" src="./assets/berry.png" alt="">
         <h2 id="panel-title"></h2><p id="panel-text"></p><div id="panel-actions"></div></div></div>
     </div>
-    <div class="strip"><span class="signal"><i></i><span id="status">等待开始</span></span><span class="stage-name"><i class="leaf"></i> 阳光果园</span></div>
+    <div class="strip"><span class="signal"><i></i><span id="status">等待开始</span></span><label class="satiety" id="satiety"><span>饱腹值</span><meter id="fullness" min="0" max="5" value="0" aria-label="饱腹值"></meter><span id="fullness-count">0/5</span></label></div>
   </section>
   <section class="guide" aria-labelledby="guide-title"><h2 id="guide-title"><svg><use href="#pad"/></svg>玩法指南</h2><div class="steps">
-    <div class="step"><div class="step-picture cam-pic"><svg><use href="#camera"/></svg></div><div><h3>单眼瞄准</h3><p>闭左眼向左，闭右眼向右，睁眼停住。</p></div></div>
-    <div class="step"><div class="step-picture"><img src="./assets/melon.png" alt=""></div><div><h3>张嘴吃水果</h3><p>水果飞进框里时张嘴，合嘴准备下一口。</p></div></div>
-    <div class="step"><div class="step-picture bolt-pic"><img src="./assets/bomb.png" alt=""></div><div><h3>放过炸弹</h3><p>误吃扣 20 分、断连击，闭嘴放过即可。</p></div></div>
+    <div class="step"><div class="step-picture cam-pic"><svg><use href="#camera"/></svg></div><div><h3>移头瞄准</h3><p>头水平向哪边移，瞄准框就跟到哪边。</p></div></div>
+    <div class="step"><div class="step-picture"><img src="./assets/melon.png" alt=""></div><div><h3>张嘴吃水果</h3><p>水果进框时张嘴，合嘴再吃。误吃炸弹扣 20 分。</p></div></div>
+    <div class="step"><div class="step-picture bolt-pic"><svg><use href="#bolt"/></svg></div><div><h3>闭眼大口吞</h3><p>吃满 5 个，闭紧双眼半秒，吞下全屏水果。</p></div></div>
   </div></section>
   <footer><span><svg><use href="#lock"/></svg>摄像头画面仅在本机处理</span><button id="offline">正在准备离线资源…</button></footer>
 </main>

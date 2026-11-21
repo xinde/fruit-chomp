@@ -1,8 +1,9 @@
-const VERSION = "d09fc3484afe8cd2";
+const VERSION = "cb2bccbed9905498";
 const FILES = [
   "index.html",
   "game.css",
   "game.js",
+  "round.js",
   "camera.js",
   "scene.js",
   "offline.js",

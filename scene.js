@@ -1,3 +1,4 @@
+import {departure} from "./round.js";
 const fruits = ["melon","orange","berry","lemon","cherry"];
 const names = [...fruits, "bomb"];
 export const bombChance = .20;
@@ -10,7 +11,6 @@ const juice = {melon:"#fa5961", orange:"#ffad2c", berry:"#ec485f", lemon:"#ffd94
 const ink = "#293548";
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 export const arrival = .78;
-export const departure = 1.13;
 
 export function createScene(canvas) {
   const ctx = canvas.getContext("2d");
@@ -103,6 +103,12 @@ export function createScene(canvas) {
         color:[juice[item.type],"#fff1ab","#ffbe42","#fff9df","#639f62"][i%5],size:r*(.052+Math.random()*.10)};
     });
   }
+  function feast(fruits,points,streak,now,aim) {
+    bite(fruits[0].item,points,streak,now,aim);
+    burst.swallowed = fruits.map(({item,pose})=>({
+      type:item.type, x:pose.x/w, y:pose.y/h, size:pose.size, angle:pose.angle
+    }));
+  }
   function drawBurst(now) {
     if (!burst) return;
     const age=(now-burst.at)/1000;
@@ -120,14 +126,23 @@ export function createScene(canvas) {
       ctx.closePath();ctx.fillStyle=burst.type==="bomb"?"#ff784c":"#ffda54";ctx.fill();
       ctx.strokeStyle=ink;ctx.lineWidth=3;ctx.stroke();
     }
-    if (age<.37 && burst.type!=="bomb") {
+    const jawDuration=burst.swallowed ? .70 : .37;
+    if (age<jawDuration && burst.type!=="bomb") {
       // Upper and lower jaws stretch open, then snap together over the fruit.
-      const snap=Math.sin(age/.37*Math.PI);
+      const snap=Math.sin(age/jawDuration*Math.PI);
       const rx=r*(1+.34*snap),ry=r*(.22+.68*snap);
       ellipse(x,y,rx,ry,ink);ellipse(x,y+ry*.48,rx*.56,ry*.3,"#f2777f");
       ctx.fillStyle="#fff5d5";
       for (let i=-2;i<=2;i++) ctx.fillRect(x+i*rx*.31-rx*.12,y-ry*.73,rx*.25,ry*.39);
-      sprite(burst.type,x,y+3,r*(1.1-age*2.8),age*6);
+      if (!burst.swallowed) sprite(burst.type,x,y+3,r*(1.1-age*2.8),age*6);
+    }
+    if (burst.swallowed && age < .58 && !reduced.matches) {
+      const pull = 1 - (1-age/.58)**2;
+      for (const fruit of burst.swallowed) {
+        const px = fruit.x*w*(1-pull) + x*pull;
+        const py = fruit.y*h*(1-pull) + y*pull - Math.sin(pull*Math.PI)*r*.7;
+        sprite(fruit.type,px,py,fruit.size*(1-pull),fruit.angle+pull*2);
+      }
     }
     for(const p of particles){
       const px=p.x+p.vx*age,py=p.y+p.vy*age+age*age*h*.61;
@@ -139,21 +154,26 @@ export function createScene(canvas) {
     const labelY=y-r*(1.2+age*.72);
     ctx.font=fontSize+"px Arcade, monospace";ctx.strokeStyle=ink;ctx.strokeText(label,x,labelY);
     ctx.fillStyle=burst.type==="bomb"?"#ffab95":"#fff695";ctx.fillText(label,x,labelY);
-    if(burst.streak>=3){
-      ctx.font="bold "+Math.round(fontSize*.7)+"px system-ui";ctx.strokeText(burst.streak+" 连击!",x,labelY+24);ctx.fillStyle="#fff8cf";ctx.fillText(burst.streak+" 连击!",x,labelY+24);
+    if(burst.swallowed || burst.streak>=3){
+      const caption=burst.swallowed ? "大口吞 ×"+burst.swallowed.length : burst.streak+" 连击!";
+      ctx.font="bold "+Math.round(fontSize*.7)+"px system-ui";ctx.strokeText(caption,x,labelY+24);ctx.fillStyle="#fff8cf";ctx.fillText(caption,x,labelY+24);
     }
     ctx.restore();
   }
-  function draw(item,pose,aim,mouth,now) {
+  function draw(flights,aim,mouth,now) {
     if (!w) resize();
     ctx.clearRect(0,0,w,h);
-    reticle(aim,mouth,pose?.inFrame,item?.type==="bomb");
-    if(item && pose){
+    const closest=flights.find(flight=>flight.pose?.inFrame);
+    reticle(aim,mouth,!!closest,closest?.item.type==="bomb");
+    // Paint distant arrivals first. The frontmost eligible item gets the bite.
+    for(let i=flights.length-1;i>=0;i--){
+      const {item,pose}=flights[i];
+      if(!pose)continue;
       const {x,y,size,angle}=pose;
       if(pose.inFrame) ellipse(x,y,size*.54,size*.54,item.type==="bomb"?"#ff7e6857":"#fff2a957");
       sprite(item.type,x,y,size,angle);
     }
     drawBurst(now);
   }
-  return {reset,makeItem,aimAt,project,bite,draw};
+  return {reset,makeItem,aimAt,project,bite,feast,draw};
 }

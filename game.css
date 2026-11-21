@@ -114,3 +114,14 @@ body{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset
   .opening .practice{margin-top:5px}.opening .primary{min-height:44px}
   .overlay-panel{padding:10px 19px}.overlay-panel>img{width:32px;height:32px}
 }
+
+.satiety{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+.satiety meter{width:clamp(52px,8vw,100px);height:12px;border:1px solid #758574;border-radius:3px;background:#26323c;appearance:none}
+.satiety meter::-webkit-meter-bar{height:100%;background:#26323c;border:0;border-radius:2px}
+.satiety meter::-webkit-meter-optimum-value{background:#a5d98b}
+.satiety meter::-moz-meter-bar{background:#a5d98b}
+.satiety.charged{color:#ffde78}
+.satiety.charged meter::-webkit-meter-optimum-value{background:#ffcf4d}
+.satiety.charged meter::-moz-meter-bar{background:#ffcf4d}
+#fullness-count{min-width:3ch;font-variant-numeric:tabular-nums}
+#feast-button{position:absolute;bottom:14px;right:14px;min-height:44px;font-size:15px;padding:7px 18px}

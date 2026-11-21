@@ -35,18 +35,50 @@ export function readExpression(result, width, height) {
   const jaw = score("jawOpen");
   const left = score("eyeBlinkLeft");
   const right = score("eyeBlinkRight");
-  // Only the preview is mirrored. Model labels refer to the player's own eyes.
   const leftGap = (distance(386,374)+distance(385,380)) / Math.max(1,2*distance(362,263));
   const rightGap = (distance(159,145)+distance(158,153)) / Math.max(1,2*distance(33,133));
-  function isWink(blink, otherBlink, eye, otherEye) {
-    const asymmetricLids = eye < .16 && otherEye > .17 && eye < .63*otherEye;
-    return asymmetricLids || (blink > .42 && otherBlink < .30 && blink-otherBlink > .30);
+  const eyeClosed = (blink, aperture) => blink > .54 || aperture < .145;
+  return {
+    open: gap > .30 || jaw > .36,
+    closed: gap < .18 && jaw < .22,
+    eyesShut: eyeClosed(left,leftGap) && eyeClosed(right,rightGap),
+    eyesOpen: left < .42 && right < .42 && leftGap > .15 && rightGap > .15,
+    // Mirror the raw cheek midpoint so the reticle follows the player's reflection.
+    headX: 1 - (points[234].x + points[454].x) / 2,
+    faceWidth: Math.abs(points[234].x - points[454].x)
+  };
+}
+
+export function headAim(face, center, travel) {
+  const offset = face.headX - center;
+  const movement = Math.sign(offset) * Math.max(0, Math.abs(offset) - .007);
+  return Math.max(0, Math.min(1, .5 + movement / (2 * travel)));
+}
+
+// Require a fresh open-to-closed gesture after charging or recovering tracking.
+export class FeastGesture {
+  reset() {
+    this.armed = false;
+    this.since = null;
+    this.lastSample = null;
   }
-  let wink = 0;
-  const bothClosed = (left > .40 && right > .40) || (leftGap < .145 && rightGap < .145);
-  if (!bothClosed) {
-    if (isWink(left,right,leftGap,rightGap)) wink = -1;
-    else if (isWink(right,left,rightGap,leftGap)) wink = 1;
+
+  sample(face, full, now) {
+    if (!full || !face) {
+      this.reset();
+      return false;
+    }
+    // A rendering stall interrupts the timer. Keep the preceding open-eye observation.
+    if (this.lastSample != null && now - this.lastSample > 350) this.since = null;
+    this.lastSample = now;
+    if (face.eyesOpen) this.armed = true;
+    if (!this.armed || !face.eyesShut) {
+      this.since = null;
+      return false;
+    }
+    this.since ??= now;
+    if (now - this.since < 500) return false;
+    this.reset();
+    return true;
   }
-  return { open: gap > .30 || jaw > .36, closed: gap < .18 && jaw < .22, wink };
 }

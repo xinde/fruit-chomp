@@ -5,7 +5,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 root = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
-files = ["index.html", "game.css", "game.js", "scene.js", "camera.js", "offline.js",
+files = ["index.html", "game.css", "game.js", "round.js", "scene.js", "camera.js", "offline.js",
          "manifest.webmanifest", "sw.js", "start-offline.py", "README.md", "LICENSE", "THIRD_PARTY.md"]
 for folder in ["assets", "vendor"]:
     files.extend(sorted(p.relative_to(root).as_posix() for p in (root / folder).rglob("*") if p.is_file()))
