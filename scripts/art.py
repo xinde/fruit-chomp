@@ -82,6 +82,18 @@ def lemon(d):
     d.line((10,23,18,16),fill="#fff3a0",width=3)
     face(d,17,21)
 
+def bomb(d):
+    d.ellipse((5,15,38,44),fill="#273343")
+    d.ellipse((6,16,34,39),fill="#4a5362")
+    d.arc((9,20,29,37),175,259,fill="#9daad0",width=2)
+    d.rectangle((22,12,30,17),fill="#b58a52")
+    d.line([(27,12),(29,8),(34,8),(36,5)],fill="#654c3c",width=3)
+    d.polygon([(37,1),(39,5),(43,5),(40,8),(41,11),(37,9),(34,11),(35,7),(32,5),(36,5)],fill="#ffb23d")
+    d.rectangle((36,5,38,7),fill="#fff5a5")
+    d.rectangle((20,23,23,31),fill="#ffda89")
+    d.rectangle((20,34,23,36),fill="#ffda89")
+
+sprite("bomb",bomb)
 fruit = {n:sprite(n,fn) for n,fn in [('melon',melon),('berry',berry),('orange',orange),('cherry',cherry),('lemon',lemon)]}
 glyphs = {
     "F": ["11111","11000","11000","11110","11000","11000","11000"],

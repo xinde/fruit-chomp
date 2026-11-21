@@ -2,13 +2,13 @@
 
 [打开游戏](https://xinde.github.io/fruit-chomp/) · [下载电脑离线包](https://github.com/xinde/fruit-chomp/releases/latest/download/fruit-chomp-offline.zip)
 
-一个用前置摄像头玩的 60 秒像素街机小游戏。水果会从果园远处飞向光圈。等水果靠近时张嘴，咬中后合嘴，再准备下一口。每个水果基础分为 10 分，每连续命中 3 个，单个水果多得 5 分，加成最高为 25 分。错过水果会重置连击。成绩只保存在当前浏览器。
+一个用前置摄像头玩的 60 秒像素街机小游戏。物品从果园远处的随机位置飞来，落点也会变化。闭住自己的左眼，瞄准框持续向左移；闭右眼向右移，睁开双眼停住。水果靠近并进入框内时张嘴，咬中后合嘴，再准备下一口。每个水果基础分为 10 分，每连续命中 3 个，单个水果多得 5 分，加成最高为 25 分。每次有 20% 的概率出现炸弹，误吃扣 20 分并重置连击，总分可以为负。放过炸弹保留连击，错过水果会重置连击。成绩只保存在当前浏览器。
 
 ## 开始游戏
 
 1. 在支持摄像头和 WebAssembly 的现代浏览器中打开游戏，点击「开始游戏」并允许使用摄像头。
 2. 把脸放进左下角的预览，合嘴片刻开始。离开画面会暂停计时，回到镜头前合嘴即可继续。
-3. 也可以选择「免摄像头试玩」，在水果进圈时点画面或按空格键。暂停按钮和 Escape 键都可以暂停。
+3. 也可以选择「免摄像头试玩」，在水果靠近时点它所在的横向位置即可瞄准并尝试咬下。键盘可按住左右方向键移动，用空格键咬。暂停按钮和 Escape 键都可以暂停。
 
 ## 手机和 iPad
 
@@ -24,7 +24,7 @@ iPhone 和 iPad 在 Safari 点「分享」→「添加到主屏幕」。如有�
 
 ## 实现
 
-原生 JavaScript、Canvas 2D 和 Service Worker。Google MediaPipe Face Landmarker 的 `jawOpen` 表情系数与唇间距共同判断开合；上下阈值和闭嘴重置避免持续张嘴重复得分。摄像头画面只在设备内存中处理，结束本局或返回首页即释放摄像头。运行时、音乐合成代码、字体、模型和像素图都随游戏分发。
+原生 JavaScript、Canvas 2D 和 Service Worker。Google MediaPipe Face Landmarker 的 `jawOpen` 表情系数与唇间距共同判断开合；上下阈值和闭嘴重置避免持续张嘴重复得分。模型读取未镜像的视频，按玩家本人的左右眼区分方向，只有持续的单侧闭眼才移动。摄像头画面只在设备内存中处理，结束本局或返回首页即释放摄像头。运行时、音乐合成代码、字体、模型和像素图都随游戏分发。
 
 - [动动乐园的姿态识别说明](https://dongdongpark.com/for/ai-pe)
 - [Google MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker/web_js)

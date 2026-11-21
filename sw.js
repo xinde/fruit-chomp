@@ -1,4 +1,4 @@
-const VERSION = "7e00c9687e4f2612";
+const VERSION = "d09fc3484afe8cd2";
 const FILES = [
   "index.html",
   "game.css",
@@ -8,6 +8,7 @@ const FILES = [
   "offline.js",
   "manifest.webmanifest",
   "assets/berry.png",
+  "assets/bomb.png",
   "assets/cherry.png",
   "assets/icon-180.png",
   "assets/icon-192.png",

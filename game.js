@@ -1,5 +1,5 @@
-import {createScene, arrival, departure} from "./scene.js";
-import {loadModel, readMouth} from "./camera.js";
+import {createScene, departure} from "./scene.js";
+import {loadModel, readExpression} from "./camera.js";
 import "./offline.js";
 
 const $ = id => document.getElementById(id);
@@ -8,14 +8,16 @@ const scene=createScene(canvas);
 const duration=60;
 let state="home", mode="practice", session=0, stream=null, detector=null;
 let lastFrame=0, lastVideo=-1, lastDetection=0, lastSeen=-Infinity, alignedSince=0;
-let score=0, streak=0, hits=0, elapsed=0, fruit=null, fruitAge=0, nextFruit=0, count=0;
+let score=0, streak=0, hits=0, elapsed=0, item=null, itemAge=0, nextItem=0;
 let mouth=false, armed=false, latched=false, keyUntil=0;
+let aim=.5, wink=0, winkSince=0;
+const heldKeys=new Set();
 let frameRequest=0, audio;
 function stored(key,fallback) {try{return localStorage.getItem(key)??fallback;}catch{return fallback;}}
 function save(key,value){try{localStorage.setItem(key,String(value));}catch{}}
 let best=Number(stored("fruit-chomp.best",0))||0;
 let sound=stored("fruit-chomp.sound","on")==="on";
-const digits=value=>String(value).padStart(4,"0");
+const digits=value=>value<0?"−"+String(-value).padStart(3,"0"):String(value).padStart(4,"0");
 function hud() {
   const values = { score: digits(score), combo: "×"+streak, seconds: String(Math.max(0,Math.ceil(duration-elapsed))), best: digits(best) };
   for (const [id, value] of Object.entries(values)) {
@@ -79,7 +81,11 @@ function fail(error, returning=false) {
   const alternate = returning ? ["结束本局",finish] : ["免摄像头试玩",()=>start("practice")];
   panel("摄像头未就绪",message,[["重试",retry,true],alternate,["返回",home]]);
 }
+function resetSteering() {
+  wink=0;winkSince=0;heldKeys.clear();
+}
 function prepareAlignment() {
+  resetSteering();
   lastSeen=-Infinity;alignedSince=0;lastVideo=-1;lastDetection=0;mouth=false;armed=false;latched=false;
   switchState("align","正在定位面部");hint("面对镜头，轻轻合上嘴巴");
 }
@@ -121,15 +127,15 @@ async function activateCamera(returning) {
   }
 }
 function start(input) {
-  invalidate();unlockSound();mode=input;score=streak=hits=elapsed=count=0;
-  fruit=null;fruitAge=0;nextFruit=0;keyUntil=0;mouth=latched=false;armed=false;hud();
+  invalidate();unlockSound();mode=input;score=streak=hits=elapsed=0;aim=.5;resetSteering();
+  item=null;itemAge=0;nextItem=0;keyUntil=0;mouth=latched=false;armed=false;hud();
   if(mode==="camera"){activateCamera(false);return;}
-  switchState("playing","免摄像头试玩");hint("水果进圈后，点画面或按空格");
+  switchState("playing","免摄像头试玩");hint("点水果瞄准并咬，或用方向键和空格");
   beginFrames();
 }
 function pause() {
   if(state!=="playing"&&state!=="align")return;
-  cancelAnimationFrame(frameRequest);stopCamera();switchState("paused","已暂停");
+  resetSteering();cancelAnimationFrame(frameRequest);stopCamera();switchState("paused","已暂停");
   panel("游戏暂停","本局分数和剩余时间已保留。",[["继续游戏",resume,true],["结束本局",finish]]);
 }
 function resume() {
@@ -148,10 +154,11 @@ function finish() {
 function readFace(now) {
   if(now-lastDetection<78||video.readyState<2||video.currentTime===lastVideo)return;
   lastDetection=now;lastVideo=video.currentTime;
-  const face=readMouth(detector.detectForVideo(video,now),video.videoWidth,video.videoHeight);
+  const face=readExpression(detector.detectForVideo(video,now),video.videoWidth,video.videoHeight);
   // A single dropped frame must not erase a closed mouth or re-arm a held bite.
-  if(!face){mouth=false;alignedSince=0;return;}
+  if(!face){mouth=false;wink=0;alignedSince=0;return;}
   lastSeen=now;
+  if(face.wink!==wink){wink=face.wink;winkSince=now;}
   if(face.closed){armed=true;mouth=false;latched=false;}
   if(face.open && armed){mouth=true;}
   if(state==="align"){
@@ -169,33 +176,58 @@ function frame(now) {
   if(state==="playing"){
     elapsed+=delta;
     if(elapsed>=duration){elapsed=duration;finish();return;}
-    if(!fruit){
-      nextFruit-=delta;
-      if(nextFruit<=0){fruit=scene.makeFruit(count++);fruitAge=0;}
+    const eyeDirection = now-lastSeen<220 && now-winkSince>=85 ? wink : 0;
+    const keyDirection = Number(heldKeys.has("ArrowRight")) - Number(heldKeys.has("ArrowLeft"));
+    const direction = mode==="camera" ? eyeDirection : keyDirection;
+    aim = Math.max(0, Math.min(1, aim + direction * .82 * Math.min(delta,.1)));
+
+    if(!item){
+      nextItem-=delta;
+      if(nextItem<=0){item=scene.makeItem();itemAge=0;}
     }
-    const flight=2.12-Math.min(.54,elapsed*.008);
-    if(fruit)fruitAge+=delta;
-    const p=fruitAge/flight;
-    const biting=mode==="camera"?mouth&&!latched:keyUntil>now;
-    if(fruit && p>=arrival && p<=departure && biting){
-      streak++;hits++;
-      const points=10+Math.min(5,Math.floor(streak/3))*5;
-      score+=points;scene.bite(fruit,points,streak,now);chirp(240,.08,0,"sawtooth");chirp(620+streak*12,.12,.045);
-      latched=true;keyUntil=0;fruit=null;nextFruit=.55;
-    } else if(fruit && p>departure){
-      streak=0;fruit=null;nextFruit=.25;
+    const flight=2.65-Math.min(.45,elapsed*.008);
+    if(item)itemAge+=delta;
+    const progress=itemAge/flight;
+    let pose=scene.project(item,progress,aim);
+    const biting=mode==="camera" ? mouth && !latched && now-lastSeen<220 : keyUntil>now;
+    if(pose?.inFrame && biting){
+      let points;
+      if(item.type==="bomb"){
+        points=-20;streak=0;
+        chirp(115,.27,0,"sawtooth");
+      } else {
+        streak++;hits++;
+        points=10+Math.min(5,Math.floor(streak/3))*5;
+        chirp(240,.08,0,"sawtooth");chirp(620+streak*12,.12,.045);
+      }
+      score+=points;
+      scene.bite(item,points,streak,now,aim);
+      latched=true;keyUntil=0;item=null;pose=null;nextItem=.65;
+    } else if(item && progress>departure){
+      if(item.type!=="bomb")streak=0;
+      item=null;pose=null;nextItem=.25;
     }
-    hint(mode==="practice"?"进圈后点画面 / 按空格":latched?"合嘴，准备下一口":fruit&&p>=arrival?"现在张嘴！":"水果飞近时张嘴");
-    scene.draw(fruit,p,mode==="camera"?mouth:keyUntil>now,now);hud();
-  } else if(state==="align")scene.draw(null,0,false,now);
+    if(item?.type==="bomb")hint("炸弹！闭嘴放过");
+    else if(mode==="practice")hint("点水果咬一口 · 方向键移动，空格咬");
+    else if(latched)hint("合嘴，准备下一口");
+    else hint(pose?.inFrame?"对准了，张嘴！":"闭左眼向左，闭右眼向右");
+    scene.draw(item,pose,aim,mode==="camera"?mouth:keyUntil>now,now);hud();
+  } else if(state==="align")scene.draw(null,null,aim,false,now);
   frameRequest=requestAnimationFrame(frame);
 }
 function practiceBite() {
   if(state==="playing" && mode==="practice")keyUntil=performance.now()+260;
 }
 $("start").onclick=()=>start("camera");$("practice").onclick=()=>start("practice");
-$("pause-button").onclick=pause;canvas.onpointerdown=practiceBite;
+$("pause-button").onclick=pause;canvas.onpointerdown=event=>{
+  if(state!=="playing"||mode!=="practice"||!event.isPrimary||event.button!==0)return;
+  aim=scene.aimAt(event.clientX);
+  practiceBite();
+};
 window.addEventListener("keydown",event=>{
+  if((event.code==="ArrowLeft"||event.code==="ArrowRight")&&mode==="practice"&&state==="playing"){
+    event.preventDefault();heldKeys.add(event.code);
+  }
   if(event.code==="Space"&&mode==="practice"&&state==="playing"&&!$("install-dialog").open){
     event.preventDefault();if(!event.repeat)practiceBite();
   }
@@ -203,6 +235,8 @@ window.addEventListener("keydown",event=>{
     if(state==="paused")resume();else pause();
   }
 });
+window.addEventListener("keyup",event=>heldKeys.delete(event.code));
+window.addEventListener("blur",resetSteering);
 window.addEventListener("fruit-settings",pause);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pause();});
 window.addEventListener("pagehide",event=>{
