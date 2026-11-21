@@ -6,7 +6,7 @@ import json
 root = Path(__file__).resolve().parents[1]
 runtime = ["index.html", "motion-test.html", "motion-test.css", "motion-test.js", "motion-checks.js",
          "game.css", "game.js", "round.js", "camera.js", "scene.js",
-           "offline.js", "pwa.js", "manifest.webmanifest"]
+           "offline.js", "input-controls.js", "pwa.js", "manifest.webmanifest"]
 for folder in ["assets", "vendor"]:
     runtime.extend(sorted(p.relative_to(root).as_posix() for p in (root / folder).rglob("*")
                           if p.is_file() and p.suffix.lower() in

@@ -1,4 +1,4 @@
-import {feastHoldMs} from "./camera.js";
+import {feastHoldMs} from "./input-controls.js";
 
 export const checks = [
   {id:"left", label:"头向左移", prepare:"头回到中间，标记停在中线附近。", action:"水平向左移头，让标记进入左侧色带。"},

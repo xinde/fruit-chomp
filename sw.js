@@ -1,4 +1,4 @@
-const VERSION = "7a3b0fff1459b982";
+const VERSION = "36cebeb289bd56cb";
 const FILES = [
   "index.html",
   "motion-test.html",
@@ -11,6 +11,7 @@ const FILES = [
   "camera.js",
   "scene.js",
   "offline.js",
+  "input-controls.js",
   "pwa.js",
   "manifest.webmanifest",
   "assets/berry.png",

@@ -41,6 +41,10 @@ export function monitorOffline(report) {
       registration.onupdatefound=inspect;
       if(!registration.active && !registration.installing && !registration.waiting)await registration.update();
       inspect();
+      // A newly visited deep link can still be under control of the previous release.
+      if(registration.active && !registration.installing && navigator.onLine){
+        registration.update().catch(()=>{}); // The installed cache remains usable offline.
+      }
     }catch{report("error");}
   }
   navigator.serviceWorker?.addEventListener("controllerchange",()=>{if(registration)inspect();});

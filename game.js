@@ -1,5 +1,6 @@
 import {createScene} from "./scene.js";
-import {loadModel, requestFrontCamera, readExpression, HeadCalibration, followAim, BiteGesture, FeastGesture} from "./camera.js";
+import {loadModel, readExpression, FeastGesture} from "./camera.js";
+import {requestFrontCamera, HeadCalibration, followAim, BiteGesture} from "./input-controls.js";
 import {Round, capacity, duration} from "./round.js";
 import "./offline.js";
 
