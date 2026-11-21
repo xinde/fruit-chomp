@@ -1,4 +1,4 @@
-const VERSION = "cb2bccbed9905498";
+const VERSION = "9b80f8466ad1c558";
 const FILES = [
   "index.html",
   "game.css",

@@ -245,6 +245,11 @@ function frame(now) {
 function practiceBite() {
   if(state==="playing" && mode==="practice")keyUntil=performance.now()+260;
 }
+$("show-guide").onclick=()=>{
+  const content=$("guide-content");
+  if(!content.firstElementChild)content.append(document.querySelector(".guide .steps").cloneNode(true));
+  $("guide-dialog").showModal();
+};
 $("start").onclick=()=>start("camera");$("practice").onclick=()=>start("practice");
 function practiceFeast() {
   if(state==="playing" && mode==="practice" && round.full)feastRequested=true;

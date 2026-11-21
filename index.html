@@ -63,7 +63,11 @@
     <div class="step"><div class="step-picture"><img src="./assets/melon.png" alt=""></div><div><h3>张嘴吃水果</h3><p>水果进框时张嘴，合嘴再吃。误吃炸弹扣 20 分。</p></div></div>
     <div class="step"><div class="step-picture bolt-pic"><svg><use href="#bolt"/></svg></div><div><h3>闭眼大口吞</h3><p>吃满 5 个，闭紧双眼半秒，吞下全屏水果。</p></div></div>
   </div></section>
-  <footer><span><svg><use href="#lock"/></svg>摄像头画面仅在本机处理</span><button id="offline">正在准备离线资源…</button></footer>
+  <footer><button id="show-guide" type="button" aria-haspopup="dialog"><svg><use href="#pad"/></svg>玩法指南</button><span><svg><use href="#lock"/></svg>摄像头画面仅在本机处理</span><button id="offline">正在准备离线资源…</button></footer>
 </main>
-<dialog id="install-dialog"><form method="dialog"><button class="close" aria-label="关闭"><svg><use href="#cross"/></svg></button></form><h2>安装与离线游玩</h2><p id="cache-detail" role="status"></p><p id="install-guide"></p><p><a href="https://github.com/xinde/fruit-chomp/releases/latest/download/fruit-chomp-offline.zip" download>下载电脑离线包</a>（需 Python 3）</p><button id="install-action" class="primary" hidden>安装游戏</button></dialog>
+<dialog id="guide-dialog" aria-labelledby="guide-dialog-title">
+  <form method="dialog"><button class="close" aria-label="关闭玩法指南"><svg><use href="#cross"/></svg></button></form>
+  <h2 id="guide-dialog-title">玩法指南</h2><div id="guide-content"></div><small class="guide-privacy">摄像头画面仅在本机处理</small>
+</dialog>
+<dialog id="install-dialog" aria-labelledby="install-title"><form method="dialog"><button class="close" aria-label="关闭"><svg><use href="#cross"/></svg></button></form><h2 id="install-title">安装与离线游玩</h2><p id="cache-detail" role="status"></p><p id="install-guide"></p><p><a href="https://github.com/xinde/fruit-chomp/releases/latest/download/fruit-chomp-offline.zip" download>下载电脑离线包</a>（需 Python 3）</p><button id="install-action" class="primary" hidden>安装游戏</button></dialog>
 </body></html>
