@@ -1,30 +1,7 @@
 import {feastHoldMs} from "./input-controls.js";
 export {headAim, HeadCalibration, followAim, BiteGesture, feastHoldMs, requestFrontCamera} from "./input-controls.js";
 
-const root = new URL("./vendor/mediapipe/", import.meta.url);
-let modelPromise;
-
-export function loadModel() {
-  if (!modelPromise) {
-    modelPromise = (async () => {
-      const { FilesetResolver, FaceLandmarker } = await import(new URL("vision_bundle.mjs", root));
-      const files = await FilesetResolver.forVisionTasks(new URL("wasm", root).href);
-      const options = {
-        baseOptions: { modelAssetPath: new URL("face_landmarker.task", root).href, delegate: "GPU" },
-        runningMode: "VIDEO",
-        numFaces: 1,
-        outputFaceBlendshapes: true
-      };
-      try {
-        return await FaceLandmarker.createFromOptions(files, options);
-      } catch {
-        options.baseOptions.delegate = "CPU";
-        return await FaceLandmarker.createFromOptions(files, options);
-      }
-    })().catch(error => { modelPromise = undefined; throw error; });
-  }
-  return modelPromise;
-}
+export {loadModel} from "./model-loader.js";
 
 // Two thresholds keep small lip movements from registering multiple bites.
 // Measure distances in image pixels so a wide camera frame does not bias the ratio.

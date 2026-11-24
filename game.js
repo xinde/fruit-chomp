@@ -1,5 +1,6 @@
 import {createScene} from "./scene.js";
-import {loadModel, readExpression, FeastGesture} from "./camera.js";
+import {prepareStartButtons} from "./model-loader.js";
+import {readExpression, FeastGesture} from "./camera.js";
 import {requestFrontCamera, HeadCalibration, followAim, BiteGesture} from "./input-controls.js";
 import {Round, capacity, duration} from "./round.js";
 import "./offline.js";
@@ -134,6 +135,7 @@ function beginFrames() {
   frameRequest=requestAnimationFrame(frame);
 }
 async function activateCamera(returning) {
+  if(!detector)return;
   const ticket=++session;
   switchState("loading","正在开启前置摄像头");
   panel(returning?"恢复摄像头":"准备摄像头","请允许使用前置摄像头，然后面对镜头，轻轻合嘴。",[
@@ -154,8 +156,6 @@ async function activateCamera(returning) {
     video.srcObject=stream;
     await video.play();
     if(ticket!==session)return;
-    detector=await loadModel();
-    if(ticket!==session)return;
     prepareAlignment();
     beginFrames();
   } catch(error) {
@@ -163,6 +163,7 @@ async function activateCamera(returning) {
   }
 }
 function start(input) {
+  if(!detector)return;
   invalidate();soundtrack.reset();unlockAudio();mode=input;round=new Round();aim=desiredAim=.5;resetSteering();
   keyUntil=0;bite.reset();hud();
   if(mode==="camera"){activateCamera(false);return;}
@@ -305,3 +306,4 @@ window.addEventListener("pagehide",event=>{
   else if(!event.persisted||state==="loading")home();
 });
 soundLabel();musicLabel();hud();
+prepareStartButtons($("model-gate"),[$("start"),$("practice")],ready=>{detector=ready;});

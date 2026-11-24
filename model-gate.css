@@ -1,0 +1,16 @@
+.model-gate{
+  box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 8px;
+  width:min(270px,76vw);padding:8px 11px;border:2px solid #314639;border-radius:6px;
+  background:#f6f8e9;color:#293c37;font-size:14px;font-weight:700;line-height:1.35;
+}
+.model-gate[hidden],.model-gate [hidden]{display:none!important}
+.model-gate [role=status]{grid-area:1/1/2/-1}
+.model-gate progress{grid-area:2/1/3/-1;width:100%;height:8px;accent-color:#477c55}
+.model-gate[data-state=error]{color:#813729;border-color:#a45842;background:#fff2e4}
+.model-gate[data-state=error] [role=status]{grid-column:1}
+.model-gate button{grid-area:1/2;border:1px solid currentColor;border-radius:4px;padding:4px 9px;min-height:34px;background:#fff9e5;color:inherit;font:inherit;cursor:pointer}
+#model-gate:not([hidden])~#start,#model-gate:not([hidden])~#practice,#model-gate:not([hidden])~#camera{display:none}
+.opening .model-gate{grid-column:1/-1}
+.actions .model-gate{width:100%}
+@media(pointer:coarse){.model-gate button{min-height:44px}}
+@media(max-height:400px){.model-gate{padding:4px 7px;font-size:13px;gap:2px 6px}}

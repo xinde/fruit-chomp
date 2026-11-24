@@ -1,4 +1,5 @@
-import {loadModel, readExpression, FeastGesture} from "./camera.js";
+import {prepareStartButtons} from "./model-loader.js";
+import {readExpression, FeastGesture} from "./camera.js";
 import {requestFrontCamera, HeadCalibration, followAim, BiteGesture} from "./input-controls.js";
 import {monitorOffline} from "./pwa.js";
 import {checks, MotionTrial} from "./motion-checks.js";
@@ -56,8 +57,9 @@ function render(){
   $("last-event").hidden=!lastAction||!tracking||!face;
   text($("last-event"),lastAction);
   let title,detail;
-  if(state==="error"){title="无法开始测试";detail=message;}
-  else if(starting){title="正在准备摄像头";detail="请允许使用前置摄像头，首次打开需加载识别模型。";}
+  if(!model){title="模型准备";detail="识别模型就绪后，可开启摄像头测试动作。";}
+  else if(state==="error"){title="无法开始测试";detail=message;}
+  else if(starting){title="正在准备摄像头";detail="请允许浏览器使用前置摄像头。";}
   else if(!running){title="准备测试 · "+check.label;detail=message||"开启摄像头，把整张脸放进画面。影像只在本机处理。";}
   else if(calibrating){title="居中校准";detail="正对镜头，头放在舒服的位置，轻轻合嘴片刻。";}
   else if(result){title=(result.pass?"通过 · ":"未通过 · ")+check.label;detail="实际结果："+result.text+"。";}
@@ -100,6 +102,7 @@ function fail(err){
   stop("error",reasons[err?.name]||"识别模型启动失败，请检查离线资源是否已备妥，再重新开启。");
 }
 async function start(){
+  if(!model)return;
   stop("loading");const current=ticket;
   try{
     const incoming=await requestFrontCamera();
@@ -107,9 +110,7 @@ async function start(){
     stream=incoming;stream.getVideoTracks()[0].onended=()=>{if(current===ticket)fail(new DOMException("Camera ended","AbortError"));};
     video.srcObject=stream;render();await video.play();
     if(current!==ticket)return;
-    const loaded=await loadModel();
-    if(current!==ticket)return;
-    model=loaded;align();lastVideo=-1;lastSample=lastFrame=0;render();
+    align();lastVideo=-1;lastSample=lastFrame=0;render();
     if(document.hidden){stop();return;}
     raf=requestAnimationFrame(frame);
   }catch(err){if(current===ticket)fail(err);}
@@ -162,3 +163,4 @@ monitorOffline(status=>{
   text($("cache-link"),{loading:"准备离线…",ready:"离线已就绪",error:"离线未就绪",unsupported:"离线不可用"}[status]);
 });
 render();
+prepareStartButtons($("model-gate"),[$("camera")],ready=>{model=ready;render();});

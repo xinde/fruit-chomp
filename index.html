@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ecf2df"><meta name="description" content="张开嘴巴，吃掉迎面飞来的像素水果。可离线玩的摄像头体感街机。">
   <title>水果大口吃 · Fruit Chomp!</title>
   <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./assets/icon-192.png"><link rel="apple-touch-icon" href="./assets/icon-180.png">
-  <link rel="stylesheet" href="./game.css"><script type="module" src="./game.js"></script>
+  <link rel="stylesheet" href="./model-gate.css"><link rel="stylesheet" href="./game.css"><script type="module" src="./game.js"></script>
 </head>
 <body>
 <svg class="defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -47,8 +47,12 @@
       <div class="opening">
         <img class="title-art" src="./assets/title.png" alt="Fruit Chomp!">
         <p>移动脑袋，张嘴吃水果！</p>
-        <button class="primary" id="start"><svg><use href="#play"/></svg>开始游戏</button>
-        <button class="practice" id="practice"><svg><use href="#keys"/></svg>免摄像头试玩</button>
+        <div id="model-gate" class="model-gate" data-state="loading">
+          <span role="status">准备识别模型…</span><progress max="100" aria-label="识别模型加载进度"></progress>
+          <button type="button" hidden>重新加载</button>
+        </div>
+        <button class="primary" id="start" disabled><svg><use href="#play"/></svg>开始游戏</button>
+        <button class="practice" id="practice" disabled><svg><use href="#keys"/></svg>免摄像头试玩</button>
       </div>
       <canvas id="world" aria-label="水果和炸弹飞行区"></canvas>
       <video id="video" muted playsinline autoplay aria-label="本机摄像头预览"></video>

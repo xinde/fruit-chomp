@@ -5,7 +5,7 @@ import json
 
 root = Path(__file__).resolve().parents[1]
 runtime = ["index.html", "motion-test.html", "motion-test.css", "motion-test.js", "motion-checks.js",
-         "game.css", "game.js", "music.js", "round.js", "camera.js", "scene.js",
+         "game.css", "model-gate.css", "model-loader.js", "game.js", "music.js", "round.js", "camera.js", "scene.js",
            "offline.js", "input-controls.js", "pwa.js", "manifest.webmanifest"]
 for folder in ["assets", "vendor"]:
     runtime.extend(sorted(p.relative_to(root).as_posix() for p in (root / folder).rglob("*")
@@ -17,11 +17,20 @@ const prefix = "fruit-chomp:" + new URL(scope).pathname + ":";
 const cacheName = prefix + VERSION;
 const urls = FILES.map(path => new URL(path, scope).href);
 const known = new Set(urls);
+const vendorRoot = new URL("vendor/mediapipe/", scope).href;
+const modelUrl = new URL("face_landmarker.task", vendorRoot).href;
+const modelIntegrity = "sha256-ZBhOIpsmMQe8K4BMZiXbE0H/K7cxh0sLzC/mVE4Lyf8=";
+
+function download(url) {
+  const options = {cache:"reload"};
+  if (url === modelUrl) options.integrity = modelIntegrity;
+  return new Request(url, options);
+}
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(cacheName);
-    await cache.addAll(urls.map(url => new Request(url, {cache: "reload"})));
+    await cache.addAll(urls.map(download));
     await self.skipWaiting();
   })());
 });
@@ -43,7 +52,7 @@ self.addEventListener("message", event => {
       const cache = await caches.open(cacheName);
       const saved = new Set((await cache.keys()).map(request => request.url));
       const missing = urls.filter(url => !saved.has(url));
-      if (missing.length) await cache.addAll(missing.map(url => new Request(url, {cache: "reload"})));
+      if (missing.length) await cache.addAll(missing.map(download));
       reply.postMessage({ready:true});
     } catch {
       reply.postMessage({ready:false});
@@ -55,11 +64,26 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  const retryAsset = url.href.startsWith(vendorRoot) && url.searchParams.has("model-retry");
   url.search = "";
   const isEntry = req.mode === "navigate" && (url.href === scope || url.href === new URL("index.html", scope).href);
   if (!isEntry && !known.has(url.href)) return;
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
+    if (retryAsset) {
+      try {
+        const fresh = await fetch(download(url.href));
+        if (fresh.ok) {
+          // A storage quota failure must not discard a valid online response.
+          await cache.put(url.href, fresh.clone()).catch(() => {});
+        }
+        return fresh;
+      } catch {
+        const saved = await cache.match(url.href);
+        if (saved) return saved;
+        return Response.error();
+      }
+    }
     return await cache.match(isEntry ? new URL("index.html", scope).href : url.href) || fetch(req);
   })());
 });

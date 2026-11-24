@@ -13,7 +13,9 @@ function verifyOffline(worker) {
   });
 }
 
-export function monitorOffline(report) {
+export function monitorOffline(onStatus) {
+  let status;
+  function report(value){status=value;onStatus(value);}
   let registration,revision=0;
   const watched=new WeakSet();
   function inspect(){
@@ -48,6 +50,7 @@ export function monitorOffline(report) {
     }catch{report("error");}
   }
   navigator.serviceWorker?.addEventListener("controllerchange",()=>{if(registration)inspect();});
+  window.addEventListener("fruit-retry-offline",()=>{if(status==="error")prepare();});
   prepare();
   return prepare;
 }
